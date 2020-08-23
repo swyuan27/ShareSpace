@@ -65,8 +65,22 @@ socket.on('roomMod', mod => {
 
 
 function outputMessage(message) {
+    if(message.text.includes('/kick')){
+        let usr = document.getElementsByClassName(message.username);
+        for(let i =0; i < usr.length; ++i){
+            usr[i].innerHTML = `<span class="meta"> <strong> ${message.username}: <strong> </span>
+            <span class="text">
+              <i> Deleted </i>
+            </span>`;
+        }
+        if(username == message.username){
+            window.location.href = 'index.html'
+        }
+        return;
+    }
     const div = document.createElement('div');
-    div.classList.add('message');
+    div.setAttribute("class", message.username)
+    //div.classList.add('message');
     div.innerHTML = `<span class="meta"> <strong> ${message.username}: <strong> </span>
     <span class="text">
       ${message.text}
@@ -84,17 +98,27 @@ function outputMod(mod){
 
 let userset = new Set()
 
-function outputUsers(users) {
+function outputUsers(_users) {
     /*users.innerHTML = `
       ${users.map(user => `<li>${user.username}</li>`).join('')}
     `;*/
-    for(let i = 0; i < users.length; ++i){
-        if(userset.has(users[i])) continue;
+    //users.innerHTML = '';
+    for(let i = 0; i < _users.length; ++i){
+        /*if(userset.has(users[i])) continue;
         userset.add(users[i]);
         const div = document.createElement('div');
         div.classList.add('users.username');
         div.innerHTML = `<ul style='display:inline-flex;' class="meta"> ${users[i].username} </ul>`;
-        messages.appendChild(div);
+        //users.innerHTML.appendChild(div);
+        users.innerHTML += div;
+        */
+        if(i == 0){
+            users.innerHTML += _users[i].username;
+        }
+        else{
+            users.innerHTML += ', ' + _users[i].username;
+        }
+        
     }
   }
 

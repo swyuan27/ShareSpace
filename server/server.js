@@ -52,9 +52,16 @@ io.on('connection', function (socket) {
   });
 
   socket.on('chatMessage', msg => {
-    const user = getCurrentUser(socket.id);
+    let user = getCurrentUser(socket.id);
+    if(msg.includes('/kick')){
+      username = msg.substring(msg.search(' ')+1)
+      console.log(username)
+    }
+    else{
+      username = user.username;
+    }
 
-    io.to(user.room).emit('message', formatMessage(user.username, msg));
+    io.to(user.room).emit('message', formatMessage(username, msg));
   });
 
   socket.on('disconnect', () =>{
