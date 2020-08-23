@@ -1,89 +1,101 @@
-var playerName;
-var playerNameInput = document.getElementById('playerNameInput');
-var socket;
 
-var screenWidth = window.innerWidth;
-var screenHeight = window.innerHeight;
+const chat = document.getElementById('chat')
+const messages = document.querySelector('.messages')
+const roomName = document.getElementById('room-name')
+const roomMod = document.getElementById('room-moderator')
+const users = document.getElementById('users')
 
-var c = document.getElementById('cvs');
-var canvas = c.getContext('2d');
-c.width = screenWidth; c.height = screenHeight;
-
-var KEY_ENTER = 13;
-
-var game = new Game();
-
-function startGame() {
-    playerName = playerNameInput.value.replace(/(<([^>]+)>)/ig, '');
-    document.getElementById('gameAreaWrapper').style.display = 'block';
-    document.getElementById('startMenuWrapper').style.display = 'none';
-    socket = io();
-    SetupSocket(socket);
-    animloop();
+let str = location.search;
+let indices = [];
+for(var i=0; i<str.length;i++) {
+    if (str[i] === "=") indices.push(i+1);
 }
 
-// check if nick is valid alphanumeric characters (and underscores)
-function validNick() {
-    var regex = /^\w*$/;
-    console.log('Regex Test', regex.exec(playerNameInput.value));
-    return regex.exec(playerNameInput.value) !== null;
+const username = str.substring(indices[0], str.search('&'))
+let room = str.substring(indices[1]);
+let setMod = false;
+if(room == "")
+{
+    room = Math.floor((Math.random()*100000)).toString();
+    setMod = true;
 }
 
-window.onload = function() {
-    'use strict';
 
-    var btn = document.getElementById('startButton'),
-        nickErrorText = document.querySelector('#startMenu .input-error');
 
-    btn.onclick = function () {
 
-        // check if the nick is valid
-        if (validNick()) {
-            startGame();
-        } else {
-            nickErrorText.style.display = 'inline';
-        }
-    };
 
-    playerNameInput.addEventListener('keypress', function (e) {
-        var key = e.which || e.keyCode;
 
-        if (key === KEY_ENTER) {
-            if (validNick()) {
-                startGame();
-            } else {
-                nickErrorText.style.display = 'inline';
-            }
-        }
-    });
-};
+const socket = io()
 
-function SetupSocket(socket) {
-  game.handleNetwork(socket);
+socket.emit('joinRoom', { username, room, setMod });
+
+socket.on('roomUsers', ({ room, users }) => {
+    outputRoomName(room);
+    outputUsers(users);
+  });
+  
+// Message from server
+socket.on('message', message => {
+    //console.log(message);
+    outputMessage(message);
+
+    // Scroll down
+    chat.scrollTop = chat.scrollHeight;
+});
+
+chat.addEventListener('submit', e => {
+    e.preventDefault();
+  
+    // Get message text
+    const msg = e.target.elements.msg.value;
+  
+    // Emit message to server
+    socket.emit('chatMessage', msg);
+  
+    // Clear input
+    e.target.elements.msg.value = '';
+    e.target.elements.msg.focus();
+  });
+
+
+socket.on('roomMod', mod => {
+    
+    outputMod(mod);
+});
+
+
+function outputMessage(message) {
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.innerHTML = `<span class="meta"> <strong> ${message.username}: <strong> </span>
+    <span class="text">
+      ${message.text}
+    </span>`;
+    messages.appendChild(div);
+  }
+
+function outputRoomName(room){
+    roomName.innerHTML = room
 }
 
-window.requestAnimFrame = (function(){
-    return  window.requestAnimationFrame       ||
-            window.webkitRequestAnimationFrame ||
-            window.mozRequestAnimationFrame    ||
-            function( callback ){
-                window.setTimeout(callback, 1000 / 60);
-            };
-})();
-
-function animloop(){
-    requestAnimFrame(animloop);
-    gameLoop();
+function outputMod(mod){
+    roomMod.innerHTML = mod.username
 }
 
-function gameLoop() {
-  game.handleLogic();
-  game.handleGraphics(canvas);
-}
+let userset = new Set()
 
-window.addEventListener('resize', function() {
-    screenWidth = window.innerWidth;
-    screenHeight = window.innerHeight;
-    c.width = screenWidth;
-    c.height = screenHeight;
-}, true);
+function outputUsers(users) {
+    /*users.innerHTML = `
+      ${users.map(user => `<li>${user.username}</li>`).join('')}
+    `;*/
+    for(let i = 0; i < users.length; ++i){
+        if(userset.has(users[i])) continue;
+        userset.add(users[i]);
+        const div = document.createElement('div');
+        div.classList.add('users.username');
+        div.innerHTML = `<ul style='display:inline-flex;' class="meta"> ${users[i].username} </ul>`;
+        messages.appendChild(div);
+    }
+  }
+
+
