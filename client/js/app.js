@@ -81,7 +81,7 @@ function outputMessage(message) {
     const div = document.createElement('div');
     div.setAttribute("class", message.username)
     //div.classList.add('message');
-    div.innerHTML = `<span class="meta"> <strong> ${message.username}: <strong> </span>
+    div.innerHTML = `<span style=="padding:20px;"class="meta"> <strong> ${message.username}: <strong> </span>
     <span class="text">
       ${message.text}
     </span>`;
@@ -102,7 +102,7 @@ function outputUsers(_users) {
     /*users.innerHTML = `
       ${users.map(user => `<li>${user.username}</li>`).join('')}
     `;*/
-    //users.innerHTML = '';
+    users.innerHTML = '';
     for(let i = 0; i < _users.length; ++i){
         /*if(userset.has(users[i])) continue;
         userset.add(users[i]);
@@ -112,6 +112,10 @@ function outputUsers(_users) {
         //users.innerHTML.appendChild(div);
         users.innerHTML += div;
         */
+
+        //if(userset.has(_users[i])) continue;
+        //userset.add(_users[i]);
+
         if(i == 0){
             users.innerHTML += _users[i].username;
         }
